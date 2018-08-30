@@ -1,0 +1,56 @@
+关于日志修改的地方
+1、init.py  main函数   第11行注释掉
+	11：Log_Cfg=file.File_init(debug=debug)
+
+2、data.py  set_raw函数  第145和第147行注释掉 第146行和第148行添加pass
+	145： Data.STORE_RAW.append(time.strftime('%Y.%m.%d-%H.%M.%S',time.localtime(time.time()))+'  '+s)
+	146： pass
+	147： Data.STORE_RAW.append(time.strftime('%Y.%m.%d-%H.%M.%S',time.localtime(time.time()))+'  '+s+'\n')
+	148： pass
+
+3、data.py  SetSendlis函数  第110行到第112行注释掉  
+	110： Data.STORE_SEND.append(Data.SEND_MSG)
+	111： Data.STORE_SEND.append(Data.SEND_STA)
+	112： Data.SEND_STATE=1
+
+关于阈值修改的地方：
+1、analyse.py
+	长雷达的探测的侧向范围，
+	16：# TRACKWIDTH = [-3,1]
+	17：TRACKWIDTH = [-10,10]
+
+	左雷达过滤的物体长度和宽度范围
+	18：# LEFTRADARLENGTH = [0,4]
+	19：# LEFTRADARWIDTH = [0,2]
+	20：LEFTRADARLENGTH = [0,20]
+	21：LEFTRADARWIDTH = [0,20]
+
+	左雷达侧向偏移界限过滤范围
+	24：# LEFTOBSRANGE = [-3,1]
+	25：LEFTOBSRANGE = [-100,100]
+
+	左雷达测量状态过滤范围
+	32：# MEASURESTATEFILTER = 3
+	33：MEASURESTATEFILTER = 6
+
+2、data.py
+	获取最近物体的信息,界限过滤范围
+	8：# XTHRESHOLD = [-1,1]
+	9：XTHRESHOLD = [-10,10]
+
+
+长雷达阈值
+	analyse.py
+	12行    物体长度过滤区间  大于  LONGRADARLENGTH    
+	13行    物体宽度过滤区间  大于  LONGRADARWIDTH     
+	17行    长雷达侧向位移过滤区间  TRACKWIDTH  轨宽
+
+左短雷达
+	21行    左雷达探测物体的长度区间 LEFTRADARLENGTH
+	22行    左雷达探测物体的长度区间 LEFTRADARWIDTH
+	26行    左雷达的探测物体的侧向偏移范围  LEFTOBSRANGE
+
+右短雷达
+    28行    左雷达探测物体的长度区间 LEFTRADARLENGTH
+	29行    左雷达探测物体的长度区间 LEFTRADARWIDTH
+	32行    左雷达的探测物体的侧向偏移范围  LEFTOBSRANGE
