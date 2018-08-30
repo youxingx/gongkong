@@ -254,7 +254,7 @@ class Serial_LongRadar(Serials):
 		super().__init__(com, 115200, 8, 'N', 1, self.Callback, '|', **kw)
 		self.info=analysis.Radar
 		self.name='LongRadar'
-		self.RadarInit(11,100);
+		# self.RadarInit(11,100);
 
 	# 长雷达数据回调处理函数
 	def Callback(self,s,mode=0):
