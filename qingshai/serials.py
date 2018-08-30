@@ -272,14 +272,6 @@ class Serial_LongRadar(Serials):
 							angle/=4.0
 							if(Radarstate&Ctlstate)==1:
 								data.Data.LongRadarMsgCycle()
-								# data.Data.LongRadarData = data.Data.LongRadarTempData
-								# data.Data.LongRadarTempData = []
-								# data.Data.LongRadarData.sort()
-								# if(len(data.Data.LongRadarData)):
-								# 	data.Data.LONG_RADAT_DIST=data.Data.LongRadarData[0]
-								# 	if float(data.Data.LONG_RADAT_DIST)<100:
-								# 		data.Data.TrainMsg['TrainFwd'] = str(data.Data.LONG_RADAT_DIST)
-										# print('TrainFwd:',data.Data.TrainMsg['TrainFwd'])
 								return self.info('LongRadar',1)#链接，正常
 							else:
 								return self.info('LongRadar',3)
@@ -439,7 +431,7 @@ class Serial_RightRadar(Serials):
 
 def check(a,b):
 	# 雷达校验码计算，hex函数返回0x格式的字符串，取最后两个值
-		return hex(a+b)[-2:]
+	return hex(a+b)[-2:]
 
 if __name__=='__main__':
 	a=Serial_LeftRadar(2)

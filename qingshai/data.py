@@ -51,8 +51,8 @@ class Data(object):
 	}
 
 	# 前后车GPS数据
-	FB_GPS=[{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':'0000'},
-			{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':'0000'}] #lat long speed dir dist_f 前车 后车
+	FB_GPS=[{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':ini['fwdTrainID'],'IP':str(ini['fwdTrainIP'])},
+			{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':ini['backTrainID'],'IP':str(ini['backTrainIP'])}] #lat long speed dir dist_f 前车 后车
 	
 	msglist=[0,1,0,0,0,0,0,0,0]
 	
@@ -63,11 +63,9 @@ class Data(object):
 	raw_state=0
 	dictionary_state=0
 	ini_state=0
-	LOCAL_IP = analysis.Get_IP()
 	# 本车GPS数据
-	LOCAL_GPS={'Lon':'invalid','Lat':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':'0000','LocalIp':str(LOCAL_IP)}
+	LOCAL_GPS={'Lon':'invalid','Lat':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':ini['localID'],'LocalIp':str(ini['localIP'])}
 	LONG_RADAT_DIST='0'
-	# TrainMsg={'TrainFwd':'invalid','TrainBack':'invalid','TrainRate':'invalid'}
 	TrainMsg={'TrainFwd':'0','TrainBack':'0','TrainRate':'invalid'}
 	PoleMsg=[]
 	LRPoleMsg=[]
@@ -100,8 +98,6 @@ class Data(object):
 	SEND_STATE=0
 	STORE_RAW=[]
 	RAW_STATE=0
-	# 本车id
-	LOCAL_ID='0000'
 	FBL_TIMEOUT={'F':0,'L':0,'B':0}#前车，后车
 
 	def SetSendlist(self):

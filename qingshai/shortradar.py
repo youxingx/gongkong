@@ -82,10 +82,10 @@ class ShortRadar(data.Data,object):
 	def checkTimeout(self):
 		while True:
 			if (time.time() - self.lrefresh) > 5:
-				print('left radar error')
+				# print('left radar error')
 				self.info('LeftRadar',2)
 			if (time.time() - self.rrefresh) > 5:
-				print('right radar error')
+				# print('right radar error')
 				self.info('RightRadar',2)
 			time.sleep(1)
 

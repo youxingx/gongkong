@@ -28,9 +28,9 @@ class File_init(data.Data):
 		# raw文件夹下存储的是个传感器的原始数据，包括GPS数据，角度传感器数据，
 		threading.Thread(target=self.Logs_log).start()
 		threading.Thread(target=self.Logs_raw).start()
+		print('LOADING CONFIG ...')
 		# 睡眠2s钟，等待配置文件读取完成
 		time.sleep(2)
-		print('LOADING CONFIG ...')
 	def Config_init(self,name):
 		if self.debug:
 			print('Config_init')
@@ -41,7 +41,12 @@ class File_init(data.Data):
 				r=json.loads(r)
 				super().set_ini(r)
 				data.Data.LOCAL_GPS['ID'] = data.Data.ini['localID']
-				data.Data.LOCAL_ID = data.Data.ini['localID']
+				data.Data.LOCAL_GPS['LocalIp'] = data.Data.ini['localIP']
+				data.Data.FB_GPS[0]['ID'] = data.Data.ini['fwdTrainID']
+				data.Data.FB_GPS[0]['IP'] = data.Data.ini['fwdTrainIP']
+				data.Data.FB_GPS[1]['ID'] = data.Data.ini['backTrainID']
+				data.Data.FB_GPS[1]['IP'] = data.Data.ini['backTrainIP']
+				# data.Data.LOCAL_ID = data.Data.ini['localID']
 		else:
 			#配置文件不存在存入日志记录
 			if self.debug:

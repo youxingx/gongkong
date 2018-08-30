@@ -28,47 +28,11 @@ class Server_UDP(data.Data):
 			self.match=uip
 		else:
 			self.match=match
-		if self.debug:
-			super().set_ini({'UDP_GPS_PORT':self.gps_port})
-			super().set_ini({'UDP_USER_PORT':self.port})
-			super().set_ini({'UDP_USER_IP':self.upper_ip})
-			print(analysis.Get_IP(match=self.match))
-			super().set_ini({'TCP_IP':analysis.Get_IP(match=self.match)})
-		else:
-			if 'LOCAL_IP' in super().get_ini() and re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',str(super().get_ini()['LOCAL_IP'])):
-					self.font_ip=super().get_ini()['LOCAL_IP']
-			else:
-				super().set_ini({'LOCAL_IP':analysis.Get_IP(match=self.match)})
-			if 'FONT_IP' in super().get_ini() and re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',str(super().get_ini()['FONT_IP'])):
-					self.font_ip=super().get_ini()['FONT_IP']
-			else:
-				super().set_ini({'FONT_IP':self.font_ip})
-			if 'BEHIND_IP' in super().get_ini() and re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',str(super().get_ini()['BEHIND_IP'])):
-					self.behind_ip=super().get_ini()['BEHIND_IP']
-			else:
-				super().set_ini({'BEHIND_IP':self.behind_ip})
-		
-			if 'UDP_GPS_PORT' in super().get_ini():
-				if re.match(r'^\d{1,5}$',str(super().get_ini()['UDP_GPS_PORT'])):
-					self.gps_port=super().get_ini()['UDP_GPS_PORT']
-				else:
-					super().set_ini({'UDP_GPS_PORT':self.gps_port})
-			else:
-				super().set_ini({'UDP_GPS_PORT':self.gps_port})
-			if 'UDP_USER_PORT' in super().get_ini():
-				if  re.match(r'^\d{1,5}$',str(super().get_ini()['UDP_USER_PORT'])):
-					self.port=super().get_ini()['UDP_USER_PORT']
-				else:
-					super().set_ini({'UDP_USER_PORT':self.port})
-			else:
-				super().set_ini({'UDP_USER_PORT':self.port})
-			if 'UDP_USER_IP' in super().get_ini():               
-				if  re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$',str(super().get_ini()['UDP_USER_IP'])):
-					self.upper_ip=super().get_ini()['UDP_USER_IP']
-				else:
-					super().set_ini({'UDP_USER_IP':self.upper_ip})
-			else:
-				super().set_ini({'UDP_USER_IP':self.upper_ip}) 
+		super().set_ini({'UDP_GPS_PORT':self.gps_port})
+		super().set_ini({'UDP_USER_PORT':self.port})
+		super().set_ini({'UDP_USER_IP':self.upper_ip})
+		print(analysis.Get_IP(match=self.match))
+		super().set_ini({'TCP_IP':analysis.Get_IP(match=self.match)})
 		super().get_dict()['GPS'].update({'IP':super().get_ini()['TCP_IP']})
 
 		# 开启向前后车发送GPS数据的线程
@@ -93,7 +57,7 @@ class Server_UDP(data.Data):
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		while True:
 			self.SetSendlist() #设置发送数据
-			print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
+			# print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
 			if self.debug:
 				# 如果是调试模式，发送给自己的主机一次，方便查看发送数据是否正确
 				sock.sendto(str(json.dumps(data.Data.SEND_STA)).encode(),('127.0.0.1',port))
@@ -328,17 +292,22 @@ class Server_TCP(data.Data):
 									if 'LocalID' in dataFormat['MethodBody'].keys():
 										self.ini['localID'] = dataFormat['MethodBody']['LocalID']
 										data.Data.LOCAL_GPS['ID'] = data.Data.ini['localID']
-										data.Data.LOCAL_ID = data.Data.ini['localID']
+										# data.Data.LOCAL_ID = data.Data.ini['localID']
 									if 'LocalIP' in dataFormat['MethodBody'].keys():
 										self.ini['localIP'] = dataFormat['MethodBody']['LocalIP']
+										data.Data.LOCAL_GPS['LocalIp'] = data.Data.ini['localIP']
 									if 'FwdTrainID' in dataFormat['MethodBody'].keys():
 										self.ini['fwdTrainID'] = dataFormat['MethodBody']['FwdTrainID']
+										data.Data.FB_GPS[0]['ID'] = data.Data.ini['fwdTrainID']
 									if 'FwdIP' in dataFormat['MethodBody'].keys():
 										self.ini['fwdTrainIP'] = dataFormat['MethodBody']['FwdIP']
+										data.Data.FB_GPS[0]['IP'] = data.Data.ini['fwdTrainIP']
 									if 'BackTrainID' in dataFormat['MethodBody'].keys():
 										self.ini['backTrainID'] = dataFormat['MethodBody']['BackTrainID']
+										data.Data.FB_GPS[1]['ID'] = data.Data.ini['backTrainID']
 									if 'BackIP' in dataFormat['MethodBody'].keys():
 										self.ini['backTrainIP'] = dataFormat['MethodBody']['BackIP']
+										data.Data.FB_GPS[0]['IP'] = data.Data.ini['backTrainIP']
 									self.fbinfostate = True
 									super().set_ini_state(1)
 						elif dataFormat['MsgCode'] == '302':
@@ -351,32 +320,37 @@ class Server_TCP(data.Data):
 								if 'LocalID' in dataFormat['MethodBody'].keys():
 									self.ini['localID'] = dataFormat['MethodBody']['LocalID']
 									data.Data.LOCAL_GPS['ID'] = data.Data.ini['localID']
-									data.Data.LOCAL_ID = data.Data.ini['localID']
+									# data.Data.LOCAL_ID = data.Data.ini['localID']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! LocalID loss'
 								if 'LocalIP' in dataFormat['MethodBody'].keys():
 									self.ini['localIP'] = dataFormat['MethodBody']['LocalIP']
+									data.Data.LOCAL_GPS['LocalIp'] = data.Data.ini['localIP']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! LocalIP loss'
 								if 'FwdTrainID' in dataFormat['MethodBody'].keys():
 									self.ini['fwdTrainID'] = dataFormat['MethodBody']['FwdTrainID']
+									data.Data.FB_GPS[0]['ID'] = data.Data.ini['fwdTrainID']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! FwdTrainID loss'
 								if 'FwdIP' in dataFormat['MethodBody'].keys():
 									self.ini['fwdTrainIP'] = dataFormat['MethodBody']['FwdIP']
+									data.Data.FB_GPS[0]['IP'] = data.Data.ini['fwdTrainIP']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! FwdIP loss'
 								if 'BackTrainID' in dataFormat['MethodBody'].keys():
 									self.ini['backTrainID'] = dataFormat['MethodBody']['BackTrainID']
+									data.Data.FB_GPS[1]['ID'] = data.Data.ini['backTrainID']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! BackTrainID loss'
 								if 'BackIP' in dataFormat['MethodBody'].keys():
 									self.ini['backTrainIP'] = dataFormat['MethodBody']['BackIP']
+									data.Data.FB_GPS[0]['IP'] = data.Data.ini['backTrainIP']
 								else:
 									MethodBody['Result'] = '2'
 									MethodBody['Reason'] = 'Msg error! BackIP loss'

@@ -40,88 +40,51 @@ def AP(*args,**kw):
 		if 'ID' in kw['data']:
 			if(kw['data']['ID'] == data.Data.ini['fwdTrainID'] and kw['data']['LocalIp'] == data.Data.ini['fwdTrainIP']):
 				data.Data.FB_GPS[0] = {'Lat':kw['data']['Lat'],'Lon':kw['data']['Lon'],'Speed':kw['data']['Speed'],'Dir':kw['data']['Dir'],
-							'distance_font':'invalid','ID':data.Data.LOCAL_ID}
-				if data.Data.Statelist[5]['Status'] == '1':
-					# 本地的GPS状态正常
-					if data.Data.LOCAL_GPS['Lat'] !='invalid' and data.Data.LOCAL_GPS['Lon'] !='invalid':
-						distance_F=haversine(float(data.Data.FB_GPS[0]['Lat'][1:]),float(data.Data.FB_GPS[0]['Lon'][1:]),float(data.Data.LOCAL_GPS['Lat'][1:]),float(data.Data.LOCAL_GPS['Lon'][1:]))
-						if data.Data.LONG_RADAT_DIST!='0' and 100>=float(data.Data.LONG_RADAT_DIST)>=0:
-							distance_F=data.Data.LONG_RADAT_DIST
-						data.Data.FB_GPS[0]['distance_font'] = str(distance_F)
-						data.Data.TrainMsg['TrainFwd'] = str(distance_F)
+							'distance_font':'invalid','ID':data.Data.ini['fwdTrainID'],'IP':data.Data.ini['fwdTrainIP']}
+				# 重置超时时间
+				data.Data.Statelist[7]['Status'] = '1'
 				data.Data.FBL_TIMEOUT['F']=5
 			if(kw['data']['ID'] == data.Data.ini['backTrainID'] and kw['data']['LocalIp'] == data.Data.ini['backTrainIP']):
 				data.Data.FB_GPS[1] = {'Lat':kw['data']['Lat'],'Lon':kw['data']['Lon'],'Speed':kw['data']['Speed'],'Dir':kw['data']['Dir'],
-							'distance_font':'invalid','ID':data.Data.LOCAL_ID}
-				if data.Data.Statelist[5]['Status'] == '1':
-					# 本地的GPS状态正常
-					if data.Data.LOCAL_GPS['Lat'] !='invalid' and data.Data.LOCAL_GPS['Lon'] !='invalid':
-						distance_B=haversine(float(data.Data.FB_GPS[1]['Lat'][1:]),float(data.Data.FB_GPS[1]['Lon'][1:]),float(data.Data.LOCAL_GPS['Lat'][1:]),float(data.Data.LOCAL_GPS['Lon'][1:]))
-						data.Data.FB_GPS[1]['distance_font'] = str(distance_B)
-						data.Data.TrainMsg['TrainBack'] = str(distance_B)
+							'distance_font':'invalid','ID':data.Data.ini['backTrainID'],'IP':data.Data.ini['backTrainIP']}
+				data.Data.Statelist[8]['Status'] = '1'
 				data.Data.FBL_TIMEOUT['B']=5
 			data.Data.Statelist[6]['Status'] = '1'
 			# print('TrainMsg:',data.Data.TrainMsg)
 	elif args[0]=='F':
+		# 前车通信故障
 		data.Data.Statelist[7]={'Device':'7','Status':str(args[1])}
-		data.Data.FB_GPS[0]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid'}
-		data.Data.TrainMsg['TrainFwd'] = str(data.Data.LONG_RADAT_DIST)
+		data.Data.FB_GPS[0]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':data.Data.ini['fwdTrainID'],'IP':data.Data.ini['fwdTrainIP']}
+		# data.Data.TrainMsg['TrainFwd'] = str(data.Data.LONG_RADAT_DIST)
 		if data.Data.Statelist[8]['Status'] == '2':
 			# 后车通讯也故障
 			data.Data.Statelist[6]['Status'] = '2'
 	elif args[0]=='B':
+		# 后车通信故障
 		data.Data.Statelist[8]={'Device':'8','Status':str(args[1])}
-		data.Data.FB_GPS[1]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid'}
-		data.Data.TrainMsg['TrainBack'] = '0'
+		data.Data.FB_GPS[1]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':data.Data.ini['backTrainID'],'IP':data.Data.ini['backTrainIP']}
+		# data.Data.TrainMsg['TrainBack'] = '0'
 		if data.Data.Statelist[7]['Status'] == '2':
 			# 前车通讯也故障
 			data.Data.Statelist[6]['Status'] = '2'
 
 def Gps(*args,**kw):
 	# gps数据处理函数
-	distance_F='0'
-	distance_B='0'
+	# distance_F='0'
+	# distance_B='0'
 	data.Data.Statelist[5]={'Device':'5','Status':str(args[1])}
 	if kw:
 		data.Data.LOCAL_GPS={'Lat':kw['Lat'],'Lon':kw['Lon'],'Speed':kw['Speed'],'Dir':kw['Dir'],
-							'distance_font':'invalid','ID':data.Data.LOCAL_ID,'LocalIp':data.Data.LOCAL_IP}
-		# print('serial LOCAL_GPS:', data.Data.LOCAL_GPS)
-		if data.Data.Statelist[7]['Status'] == '1':
-			# 前车GPS状态正常
-			if data.Data.FB_GPS[0]['Lon'] !='invalid' and data.Data.FB_GPS[0]['Lat'] !='invalid':#前车
-				distance_F=haversine(data.Data.FB_GPS[0]['Lat'][1:],data.Data.FB_GPS[0]['Lon'][1:],kw['Lat'][1:],kw['Lon'][1:])
-				# 长雷达设备状态正常，长雷达探测前车距离<100m
-				if data.Data.Statelist[3]['Status']=='1' and 100>=float(data.Data.LONG_RADAT_DIST)>=0:
-					distance_F=data.Data.LONG_RADAT_DIST
-			else:
-				distance_F=data.Data.LONG_RADAT_DIST
-		else:
-			# 前车GPS状态出错
-			distance_F=data.Data.LONG_RADAT_DIST
-		# if data.Data.FB_GPS[1]['distance_font']!='invalid':
-		# 	distance_B=data.Data.FB_GPS[1]['distance_font']
-		if data.Data.Statelist[7]['Status'] == '1':
-			# 后车GPS状态正常
-			if data.Data.FB_GPS[1]['Lon'] !='invalid' and data.Data.FB_GPS[1]['Lat'] !='invalid':#后车
-				distance_B=haversine(float(data.Data.FB_GPS[1]['Lat'][1:]),float(data.Data.FB_GPS[1]['Lon'][1:]),float(kw['Lat'][1:]),float(kw['Lon'][1:]))
-		else:
-			distance_B='0'
-		data.Data.LOCAL_GPS['distance_font']=distance_F
-		# print('distance_F:', distance_F)
-		# print('distance_B:', distance_B)
-		data.Data.TrainMsg={		'TrainFwd':str(distance_F),
-									'TrainBack':str(distance_B),
-									'TrainRate':str(kw['Speed'])}
+							'distance_font':'invalid','ID':data.Data.ini['localID'],'LocalIp':data.Data.ini['localIP']}
 	else:
 		# data.Data.LOCAL_GPS={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid'}
-		# LOCAL_GPS={'Lon':'invalid','Lat':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':'0000','LocalIp':str(LOCAL_IP)}
-		data.Data.LOCAL_GPS['Lon'] = 'invalid'
 		data.Data.LOCAL_GPS['Lat'] = 'invalid'
+		data.Data.LOCAL_GPS['Lon'] = 'invalid'
 		data.Data.LOCAL_GPS['Speed'] = 'invalid'
 		data.Data.LOCAL_GPS['Dir'] = 'invalid'
 		data.Data.LOCAL_GPS['distance_font'] = '0'
-		data.Data.TrainMsg['TrainFwd'] = data.Data.LONG_RADAT_DIST
-		data.Data.TrainMsg['TrainBack'] = '0'
+		# data.Data.TrainMsg['TrainFwd'] = data.Data.LONG_RADAT_DIST
+		# data.Data.TrainMsg['TrainBack'] = '0'
 
 def Angle(*args,**kw):
 	# 角度处理函数
@@ -148,16 +111,7 @@ def Radar(*args,**kw):
 							#物体尺寸和概率过滤
 							if kw['latsht']>=TRACKWIDTH[0] and kw['latsht']<=TRACKWIDTH[1]:
 								#界限过滤
-								# print('latsht')
-								# print('lonsht:', kw['lonsht'])
-								# print('dlongy:', dlongy)
-								# data.Data.LONG_RADAT_DIST=kw['lonsht']-dlongy
-								# data.Data.LONG_RADAT_DIST=kw['lonsht']
 								data.Data.LongRadarTempData.append(kw['lonsht'])
-								# print(data.Data.LONG_RADAT_DIST)
-								# if float(data.Data.LONG_RADAT_DIST)<100:
-								# 	data.Data.TrainMsg['TrainFwd'] = str(data.Data.LONG_RADAT_DIST)
-								# data.Data.TrainMsg['TrainRate'] = str(kw['speed'])
 							else:
 								print('limit out of range')
 						else:
@@ -319,7 +273,7 @@ def Get_IP(inner=1,match=None):
 					for i in socket.gethostbyname_ex(socket.gethostname())[2]:
 						if i.startswith(re.match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3})\.(\d{1,3})',match).group(1)):
 							ip=i
-							return ip   
+							return ip
 
 if __name__=='__main__':
 	s='$GPRMC,044549.60,A,3955.7333600,N,11607.6355300,E,13.6,325.1,010616,999,E,A*12\r\n'
