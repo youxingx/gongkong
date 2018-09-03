@@ -200,7 +200,7 @@ class Data(object):
 				# 遍历雷达数据查找和GPS差值最小的数据
 				Data.LongRDataLock.acquire()
 				for i in Data.LongRadarData:
-					if abs(i-fontDis)<0.5:
+					if abs(i-fontDis)<2:
 						# 找到目标，退出
 						TrainMsg['TrainFwd'] = str(round(i,2))
 						LastFontDis = round(i,2)
@@ -269,10 +269,18 @@ class Data(object):
 			if len(Data.LongRadarData):
 				# 有目标
 				# 加锁
+				aimFlag = False
 				Data.LongRDataLock.acquire()
-				TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
+				for i in Data.LongRadarData:
+					if abs(i-LastFontDis)<0.5:
+						# 找到目标，退出
+						TrainMsg['TrainFwd'] = str(round(i,2))
+						LastFontDis = round(i,2)
+						aimFlag = True
+						break
+				if not aimFlag:
+					TrainMsg['TrainFwd'] = str(round(LastFontDis,2))
 				Data.LongRDataLock.release()
-				LastFontDis = round(Data.LongRadarData[0],2)
 			else:
 				# 没有找到目标，采用上一次的值
 				TrainMsg['TrainFwd'] = str(LastFontDis)
