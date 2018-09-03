@@ -94,6 +94,7 @@ def Angle(*args,**kw):
 	else:
 		data.Data.AngleMsg={'AngleData':'invalid'}
 	# print('AngleMsg:',data.Data.AngleMsg)
+	
 def Radar(*args,**kw):
 	if args[0]=='LongRadar':
 		# 长程雷达处理函数
@@ -127,18 +128,18 @@ def Radar(*args,**kw):
 				# 雷达状态错误
 				# print('state:',data.Data.Statelist[3])
 				data.Data.LONG_RADAT_DIST = '0'
-				if data.Data.Statelist[5]['Status'] == '1' and data.Data.Statelist[7]['Status'] == '1':
-					# GPS状态正常，前车距和速度采用GPS数据计算，后车距为invilid
-					if data.Data.LOCAL_GPS['Lon'] != 'invalid' and data.Data.LOCAL_GPS['Lat'] != 'invalid' and data.Data.FB_GPS[0]['Lon'] !='invalid' and data.Data.FB_GPS[0]['Lat'] !='invalid':
-						data.Data.TrainMsg['TrainFwd'] = haversine(float(data.Data.FB_GPS[0]['Lat'][1:]),float(data.Data.FB_GPS[0]['Lon'][1:]),float(data.Data.LOCAL_GPS['Lat'][1:]),float(data.Data.LOCAL_GPS['Lon'][1:]))
-					else:
-						data.Data.TrainMsg['TrainFwd'] = 'invalid'
-					data.Data.TrainMsg['TrainRate'] = str(data.Data.LOCAL_GPS['Speed'])
-				else:
-					# GPS状态也不正常,前后车距，当前速度都为invilid
-					data.Data.TrainMsg['TrainFwd'] = '0'
-					data.Data.TrainMsg['TrainBack'] = '0'
-					data.Data.TrainMsg['TrainRate'] = 'invalid'
+				# if data.Data.Statelist[5]['Status'] == '1' and data.Data.Statelist[7]['Status'] == '1':
+				# 	# GPS状态正常，前车距和速度采用GPS数据计算，后车距为invilid
+				# 	if data.Data.LOCAL_GPS['Lon'] != 'invalid' and data.Data.LOCAL_GPS['Lat'] != 'invalid' and data.Data.FB_GPS[0]['Lon'] !='invalid' and data.Data.FB_GPS[0]['Lat'] !='invalid':
+				# 		data.Data.TrainMsg['TrainFwd'] = haversine(float(data.Data.FB_GPS[0]['Lat'][1:]),float(data.Data.FB_GPS[0]['Lon'][1:]),float(data.Data.LOCAL_GPS['Lat'][1:]),float(data.Data.LOCAL_GPS['Lon'][1:]))
+				# 	else:
+				# 		data.Data.TrainMsg['TrainFwd'] = 'invalid'
+				# 	data.Data.TrainMsg['TrainRate'] = str(data.Data.LOCAL_GPS['Speed'])
+				# else:
+				# 	# GPS状态也不正常,前后车距，当前速度都为invilid
+				# 	data.Data.TrainMsg['TrainFwd'] = '0'
+				# 	data.Data.TrainMsg['TrainBack'] = '0'
+				# 	data.Data.TrainMsg['TrainRate'] = 'invalid'
 				# print('TrainMsg:',data.Data.TrainMsg)
 	elif args[0]=='LeftRadar' or args[0]=='RightRadar':
 		if args[0]=='LeftRadar':

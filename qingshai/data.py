@@ -54,11 +54,7 @@ class Data(object):
 	FB_GPS=[{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':ini['fwdTrainID'],'IP':str(ini['fwdTrainIP'])},
 			{'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':ini['backTrainID'],'IP':str(ini['backTrainIP'])}] #lat long speed dir dist_f 前车 后车
 	
-	msglist=[0,1,0,0,0,0,0,0,0]
-	
-	Obstacle=[]
-	
-	broadcastlsit=[0]
+	LastFontDis = 0
 	raw_data=[]
 	raw_state=0
 	dictionary_state=0
@@ -178,34 +174,108 @@ class Data(object):
 		Data.LongRadarTempData = []
 		# print('LongRadarData:',data.Data.LongRadarData)
 		Data.LongRadarData.sort()
-		if(len(Data.LongRadarData)):
-			# 判断GPS状态和前车通信状态如果都ok,则通过GPS计算前后车的距离
-			if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
-				# 计算GPS
-				gpsDistance = haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:])
-				flag = False
+		# if(len(Data.LongRadarData)):
+		# 	# 判断GPS状态和前车通信状态如果都ok,则通过GPS计算前后车的距离
+		# 	if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
+		# 		# 计算GPS
+		# 		gpsDistance = haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:])
+		# 		flag = False
+		# 		for i in Data.LongRadarData:
+		# 			# 和GPS数据比对
+		# 			if i > 100:
+		# 				Data.LONG_RADAT_DIST = gpsDistance
+		# 				Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
+		# 				flag = True
+		# 				break
+		# 			else:
+		# 				if abs(gpsDistance - i - CARLENGTH) < GPSCONTRAST:
+		# 					Data.LONG_RADAT_DIST = i
+		# 					Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
+		# 					flag = True
+		# 					break
+		# 		if not flag:
+		# 			Data.LONG_RADAT_DIST = i
+		# 			Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
+		# 	else:
+		# 		Data.LONG_RADAT_DIST=Data.LongRadarData[0]
+		# 		Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
+		# else:
+		# 	if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
+		# 		Data.TrainMsg['TrainFwd'] = str(haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:]))
+
+	def assignTrainMsg(self):
+		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] == '1':
+			# 长雷达，本车GPS状态都正常
+			if Data.Statelist[7]['Status'] == '1':
+				# 前车通信正常
+				# 根据本车GPS数据和前车GPS数据计算前车距
+				fontDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[0]['Lat'][1:]),float(Data.FB_GPS[0]['Lon'][1:]))
+				aimFlag = False
+				# 遍历雷达数据查找和GPS差值最小的数据
 				for i in Data.LongRadarData:
-					# 和GPS数据比对
-					if i > 100:
-						Data.LONG_RADAT_DIST = gpsDistance
-						Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-						flag = True
+					if abs(i-fontDis)<0.5:
+						# 找到目标，退出
+						TrainMsg['TrainFwd'] = str(round(i,2))
+						LastFontDis = round(i,2)
+						aimFlag = True
 						break
-					else:
-						if abs(gpsDistance - i - CARLENGTH) < GPSCONTRAST:
-							Data.LONG_RADAT_DIST = i
-							Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-							flag = True
-							break
-				if not flag:
-					Data.LONG_RADAT_DIST = i
-					Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
+				if not aimFlag:
+					# 没有找到目标，采用上一次的值
+					TrainMsg['TrainFwd'] = str(LastFontDis)
 			else:
-				Data.LONG_RADAT_DIST=Data.LongRadarData[0]
-				Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-		else:
-			if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
-				Data.TrainMsg['TrainFwd'] = str(haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:]))
+				# 前车通信不正常
+				if len(Data.LongRadarData):
+					# 有目标
+					TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
+					LastFontDis = round(Data.LongRadarData[0],2)
+				else:
+					# 没有找到目标，采用上一次的值
+					TrainMsg['TrainFwd'] = str(LastFontDis)
+			if Data.Statelist[8]['Status'] == '1':
+				# 后车通信正常
+				backDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[1]['Lat'][1:]),float(Data.FB_GPS[1]['Lon'][1:]))
+				TrainMsg['TrainFwd'] = str(round(backDis,2))
+			else:
+				# 后车通信不正常
+				TrainMsg['TrainFwd'] = '0'
+				pass
+			pass
+		if Data.Statelist[5]['Status'] == '1' and  Data.Statelist[3]['Status'] != '1':
+			# GPS状态正常，长雷达状态不正常
+			# 根据GPS计算前后车距
+			if Data.Statelist[7]['Status'] == '1':
+				# 前车通信正常
+				fontDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[0]['Lat'][1:]),float(Data.FB_GPS[0]['Lon'][1:]))
+				TrainMsg['TrainFwd'] = str(round(fontDis,2))
+				LastFontDis = round(fontDis,2)
+			else:
+				# 前车通信不正常
+				TrainMsg['TrainFwd'] = '0'
+				LastFontDis = 0
+			if Data.Statelist[8]['Status'] == '1':
+				# 后车通信正常
+				backDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[1]['Lat'][1:]),float(Data.FB_GPS[1]['Lon'][1:]))
+				TrainMsg['TrainBack'] = str(round(backDis,2))
+			else:
+				# 后车通信不正常
+				TrainMsg['TrainBack'] = '0'
+		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] != '1':
+			# 长雷达状态正常，GPS状态不正常
+			# 查找距离最近的数据
+			# 前车通信不正常
+			if len(Data.LongRadarData):
+				# 有目标
+				TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
+				LastFontDis = round(Data.LongRadarData[0],2)
+			else:
+				# 没有找到目标，采用上一次的值
+				TrainMsg['TrainFwd'] = str(LastFontDis)
+			# 后车距为0
+			TrainMsg['TrainBack'] = '0'
+			TrainMsg['TrainRate'] = 'invalid'
+		if Data.Statelist[3]['Status'] ！= '1' and Data.Statelist[5]['Status'] != '1':
+			# 长雷达状态正常，GPS状态不正常
+			TrainMsg={'TrainFwd':'0','TrainBack':'0','TrainRate':'invalid'}
 
 	def LRRadarMsgCycle(radar):
 		if radar == 'L':
