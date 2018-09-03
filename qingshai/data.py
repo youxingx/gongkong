@@ -105,6 +105,7 @@ class Data(object):
 		for i in Data.Statelist:
 			if i:
 				statelist.append(i)
+		self.assignTrainMsg()
 		self.assignPloeMsg()
 		# 数据信息
 		Data.SEND_MSG={"MsgCode":"204","Time":time.strftime('%Y.%m.%d-%H.%M.%S',time.localtime(time.time())),
@@ -172,36 +173,7 @@ class Data(object):
 	def LongRadarMsgCycle():
 		Data.LongRadarData = Data.LongRadarTempData
 		Data.LongRadarTempData = []
-		# print('LongRadarData:',data.Data.LongRadarData)
 		Data.LongRadarData.sort()
-		# if(len(Data.LongRadarData)):
-		# 	# 判断GPS状态和前车通信状态如果都ok,则通过GPS计算前后车的距离
-		# 	if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
-		# 		# 计算GPS
-		# 		gpsDistance = haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:])
-		# 		flag = False
-		# 		for i in Data.LongRadarData:
-		# 			# 和GPS数据比对
-		# 			if i > 100:
-		# 				Data.LONG_RADAT_DIST = gpsDistance
-		# 				Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-		# 				flag = True
-		# 				break
-		# 			else:
-		# 				if abs(gpsDistance - i - CARLENGTH) < GPSCONTRAST:
-		# 					Data.LONG_RADAT_DIST = i
-		# 					Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-		# 					flag = True
-		# 					break
-		# 		if not flag:
-		# 			Data.LONG_RADAT_DIST = i
-		# 			Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-		# 	else:
-		# 		Data.LONG_RADAT_DIST=Data.LongRadarData[0]
-		# 		Data.TrainMsg['TrainFwd'] = str(Data.LONG_RADAT_DIST)
-		# else:
-		# 	if Data.Statelist[5]['Status'] == '1' and Data.Statelist[7]['Status'] == '1':
-		# 		Data.TrainMsg['TrainFwd'] = str(haversine(Data.FB_GPS[0]['Lat'][1:],Data.FB_GPS[0]['Lon'][1:],Data.LOCAL_GPS['Lat'][1:],Data.LOCAL_GPS['Lon'][1:]))
 
 	def assignTrainMsg(self):
 		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] == '1':
