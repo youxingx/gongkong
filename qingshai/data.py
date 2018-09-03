@@ -192,8 +192,9 @@ class Data(object):
 						aimFlag = True
 						break
 				if not aimFlag:
-					# 没有找到目标，采用上一次的值
-					TrainMsg['TrainFwd'] = str(LastFontDis)
+					# 没有找到目标，采用gps数据
+					TrainMsg['TrainFwd'] = str(round(fontDis,2))
+					LastFontDis = round(fontDis,2)
 			else:
 				# 前车通信不正常
 				if len(Data.LongRadarData):
