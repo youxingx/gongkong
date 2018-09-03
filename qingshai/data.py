@@ -20,9 +20,17 @@ class Data(object):
 	# Data类，记录核心数据
 
 	# 左雷达数据锁
-	# LRDataLock = threading.Lock()
+	LeftRDataLock = threading.Lock()
 	# 右雷达数据锁
-	# RRDataLock = threading.Lock()
+	RightRDataLock = threading.Lock()
+	# 长雷达数据锁
+	LongRDataLock = threading.Lock()
+	# 本车GPS数据锁
+	LocalGPSLock = threading.Lock()
+	# 前车GPS数据锁
+	FontGPSLock = threading.Lock()
+	# 后车GPS数据锁
+	BackGPSLock = threading.lock()
 
 	"""docstring for Data"""
 	dictionary = {'GPS':{},
@@ -171,9 +179,11 @@ class Data(object):
 		return send
 
 	def LongRadarMsgCycle():
+		Data.LongRDataLock.acquire()
 		Data.LongRadarData = Data.LongRadarTempData
-		Data.LongRadarTempData = []
 		Data.LongRadarData.sort()
+		Data.LongRDataLock.release()
+		Data.LongRadarTempData = []
 
 	def assignTrainMsg(self):
 		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] == '1':
@@ -181,9 +191,14 @@ class Data(object):
 			if Data.Statelist[7]['Status'] == '1':
 				# 前车通信正常
 				# 根据本车GPS数据和前车GPS数据计算前车距
+				Data.LocalGPSLock.acquire()
+				Data.FontGPSLock.acquire()
 				fontDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[0]['Lat'][1:]),float(Data.FB_GPS[0]['Lon'][1:]))
+				Data.LocalGPSLock.release()
+				Data.FontGPSLock.release()
 				aimFlag = False
 				# 遍历雷达数据查找和GPS差值最小的数据
+				Data.LongRDataLock.acquire()
 				for i in Data.LongRadarData:
 					if abs(i-fontDis)<0.5:
 						# 找到目标，退出
@@ -191,6 +206,7 @@ class Data(object):
 						LastFontDis = round(i,2)
 						aimFlag = True
 						break
+				Data.LongRDataLock.release()
 				if not aimFlag:
 					# 没有找到目标，采用gps数据
 					TrainMsg['TrainFwd'] = str(round(fontDis,2))
@@ -199,15 +215,21 @@ class Data(object):
 				# 前车通信不正常
 				if len(Data.LongRadarData):
 					# 有目标
+					Data.LongRDataLock.acquire()
 					TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
 					LastFontDis = round(Data.LongRadarData[0],2)
+					Data.LongRDataLock.release()
 				else:
 					# 没有找到目标，采用上一次的值
 					TrainMsg['TrainFwd'] = str(LastFontDis)
 			if Data.Statelist[8]['Status'] == '1':
 				# 后车通信正常
+				Data.LocalGPSLock.acquire()
+				Data.BackGPSLock.acquire()
 				backDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[1]['Lat'][1:]),float(Data.FB_GPS[1]['Lon'][1:]))
 				TrainMsg['TrainFwd'] = str(round(backDis,2))
+				Data.LocalGPSLock.release()
+				Data.BackGPSLock.release()
 			else:
 				# 后车通信不正常
 				TrainMsg['TrainFwd'] = '0'
@@ -218,7 +240,11 @@ class Data(object):
 			# 根据GPS计算前后车距
 			if Data.Statelist[7]['Status'] == '1':
 				# 前车通信正常
+				Data.LocalGPSLock.acquire()
+				Data.FontGPSLock.acquire()
 				fontDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[0]['Lat'][1:]),float(Data.FB_GPS[0]['Lon'][1:]))
+				Data.LocalGPSLock.release()
+				Data.FontGPSLock.release()
 				TrainMsg['TrainFwd'] = str(round(fontDis,2))
 				LastFontDis = round(fontDis,2)
 			else:
@@ -227,7 +253,11 @@ class Data(object):
 				LastFontDis = 0
 			if Data.Statelist[8]['Status'] == '1':
 				# 后车通信正常
+				Data.LocalGPSLock.acquire()
+				Data.BackGPSLock.acquire()
 				backDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[1]['Lat'][1:]),float(Data.FB_GPS[1]['Lon'][1:]))
+				Data.LocalGPSLock.release()
+				Data.BackGPSLock.release()
 				TrainMsg['TrainBack'] = str(round(backDis,2))
 			else:
 				# 后车通信不正常
@@ -238,7 +268,10 @@ class Data(object):
 			# 前车通信不正常
 			if len(Data.LongRadarData):
 				# 有目标
+				# 加锁
+				Data.LongRDataLock.acquire()
 				TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
+				Data.LongRDataLock.release()
 				LastFontDis = round(Data.LongRadarData[0],2)
 			else:
 				# 没有找到目标，采用上一次的值

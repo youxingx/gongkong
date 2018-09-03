@@ -39,14 +39,18 @@ def AP(*args,**kw):
 		# print('data:', kw['data'])
 		if 'ID' in kw['data']:
 			if(kw['data']['ID'] == data.Data.ini['fwdTrainID'] and kw['data']['LocalIp'] == data.Data.ini['fwdTrainIP']):
+				data.Data.FontGPSLock.acquire()
 				data.Data.FB_GPS[0] = {'Lat':kw['data']['Lat'],'Lon':kw['data']['Lon'],'Speed':kw['data']['Speed'],'Dir':kw['data']['Dir'],
 							'distance_font':'invalid','ID':data.Data.ini['fwdTrainID'],'IP':data.Data.ini['fwdTrainIP']}
+				data.Data.FontGPSLock.release()
 				# 重置超时时间
 				data.Data.Statelist[7]['Status'] = '1'
 				data.Data.FBL_TIMEOUT['F']=5
 			if(kw['data']['ID'] == data.Data.ini['backTrainID'] and kw['data']['LocalIp'] == data.Data.ini['backTrainIP']):
+				data.Data.BackGPSLock.acquire()
 				data.Data.FB_GPS[1] = {'Lat':kw['data']['Lat'],'Lon':kw['data']['Lon'],'Speed':kw['data']['Speed'],'Dir':kw['data']['Dir'],
 							'distance_font':'invalid','ID':data.Data.ini['backTrainID'],'IP':data.Data.ini['backTrainIP']}
+				data.Data.BackGPSLock.release()
 				data.Data.Statelist[8]['Status'] = '1'
 				data.Data.FBL_TIMEOUT['B']=5
 			data.Data.Statelist[6]['Status'] = '1'
@@ -54,7 +58,9 @@ def AP(*args,**kw):
 	elif args[0]=='F':
 		# 前车通信故障
 		data.Data.Statelist[7]={'Device':'7','Status':str(args[1])}
+		data.Data.FontGPSLock.acquire()
 		data.Data.FB_GPS[0]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':data.Data.ini['fwdTrainID'],'IP':data.Data.ini['fwdTrainIP']}
+		data.Data.FontGPSLock.release()
 		# data.Data.TrainMsg['TrainFwd'] = str(data.Data.LONG_RADAT_DIST)
 		if data.Data.Statelist[8]['Status'] == '2':
 			# 后车通讯也故障
@@ -62,7 +68,9 @@ def AP(*args,**kw):
 	elif args[0]=='B':
 		# 后车通信故障
 		data.Data.Statelist[8]={'Device':'8','Status':str(args[1])}
+		data.Data.BackGPSLock.acquire()
 		data.Data.FB_GPS[1]={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid','ID':data.Data.ini['backTrainID'],'IP':data.Data.ini['backTrainIP']}
+		data.Data.BackGPSLock.release()
 		# data.Data.TrainMsg['TrainBack'] = '0'
 		if data.Data.Statelist[7]['Status'] == '2':
 			# 前车通讯也故障
@@ -74,15 +82,19 @@ def Gps(*args,**kw):
 	# distance_B='0'
 	data.Data.Statelist[5]={'Device':'5','Status':str(args[1])}
 	if kw:
+		data.Data.LocalGPSLock.acquire()
 		data.Data.LOCAL_GPS={'Lat':kw['Lat'],'Lon':kw['Lon'],'Speed':kw['Speed'],'Dir':kw['Dir'],
 							'distance_font':'invalid','ID':data.Data.ini['localID'],'LocalIp':data.Data.ini['localIP']}
+		data.Data.LocalGPSLock.release()
 	else:
 		# data.Data.LOCAL_GPS={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid'}
+		data.Data.LocalGPSLock.acquire()
 		data.Data.LOCAL_GPS['Lat'] = 'invalid'
 		data.Data.LOCAL_GPS['Lon'] = 'invalid'
 		data.Data.LOCAL_GPS['Speed'] = 'invalid'
 		data.Data.LOCAL_GPS['Dir'] = 'invalid'
 		data.Data.LOCAL_GPS['distance_font'] = '0'
+		data.Data.LocalGPSLock.release()
 		# data.Data.TrainMsg['TrainFwd'] = data.Data.LONG_RADAT_DIST
 		# data.Data.TrainMsg['TrainBack'] = '0'
 
