@@ -203,25 +203,33 @@ class Data(object):
 					if abs(i-fontDis)<2:
 						# 找到目标，退出
 						TrainMsg['TrainFwd'] = str(round(i,2))
-						LastFontDis = round(i,2)
+						Data.LastFontDis = round(i,2)
 						aimFlag = True
 						break
 				Data.LongRDataLock.release()
 				if not aimFlag:
 					# 没有找到目标，采用gps数据
 					TrainMsg['TrainFwd'] = str(round(fontDis,2))
-					LastFontDis = round(fontDis,2)
+					Data.LastFontDis = round(fontDis,2)
 			else:
 				# 前车通信不正常
 				if len(Data.LongRadarData):
 					# 有目标
+					aimFlag = False
 					Data.LongRDataLock.acquire()
-					TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
-					LastFontDis = round(Data.LongRadarData[0],2)
+					for i in Data.LongRadarData:
+						if abs(i-Data.LastFontDis)<0.5:
+							# 找到目标，退出
+							TrainMsg['TrainFwd'] = str(round(i,2))
+							Data.LastFontDis = round(i,2)
+							aimFlag = True
+							break
+					if not aimFlag:
+						TrainMsg['TrainFwd'] = str(round(Data.LastFontDis,2))
 					Data.LongRDataLock.release()
 				else:
 					# 没有找到目标，采用上一次的值
-					TrainMsg['TrainFwd'] = str(LastFontDis)
+					TrainMsg['TrainFwd'] = str(Data.LastFontDis)
 			if Data.Statelist[8]['Status'] == '1':
 				# 后车通信正常
 				Data.LocalGPSLock.acquire()
@@ -246,11 +254,11 @@ class Data(object):
 				Data.LocalGPSLock.release()
 				Data.FontGPSLock.release()
 				TrainMsg['TrainFwd'] = str(round(fontDis,2))
-				LastFontDis = round(fontDis,2)
+				Data.LastFontDis = round(fontDis,2)
 			else:
 				# 前车通信不正常
 				TrainMsg['TrainFwd'] = '0'
-				LastFontDis = 0
+				Data.LastFontDis = 0
 			if Data.Statelist[8]['Status'] == '1':
 				# 后车通信正常
 				Data.LocalGPSLock.acquire()
@@ -272,18 +280,18 @@ class Data(object):
 				aimFlag = False
 				Data.LongRDataLock.acquire()
 				for i in Data.LongRadarData:
-					if abs(i-LastFontDis)<0.5:
+					if abs(i-Data.LastFontDis)<0.5:
 						# 找到目标，退出
 						TrainMsg['TrainFwd'] = str(round(i,2))
-						LastFontDis = round(i,2)
+						Data.LastFontDis = round(i,2)
 						aimFlag = True
 						break
 				if not aimFlag:
-					TrainMsg['TrainFwd'] = str(round(LastFontDis,2))
+					TrainMsg['TrainFwd'] = str(round(Data.LastFontDis,2))
 				Data.LongRDataLock.release()
 			else:
 				# 没有找到目标，采用上一次的值
-				TrainMsg['TrainFwd'] = str(LastFontDis)
+				TrainMsg['TrainFwd'] = str(Data.LastFontDis)
 			# 后车距为0
 			TrainMsg['TrainBack'] = '0'
 			TrainMsg['TrainRate'] = 'invalid'
