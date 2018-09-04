@@ -165,11 +165,13 @@ def Radar(*args,**kw):
 							if kw['width']>=LEFTRADARWIDTH[0] and kw['width']<=LEFTRADARWIDTH[1]:
 								if kw['probability']>=LEFTRADARPROBABILITY:
 									if kw['latsht']>=LEFTOBSRANGE[0] and kw['latsht']<=LEFTOBSRANGE[1]:
-										# print('latsht:',kw['latsht'])
-										# 界限过滤
-										msg = ['L#'+str(kw['objId']),kw['latsht'],kw['lonsht']]
-										data.Data.LRRadarMsgAdd('L',msg)
-										# print('pole:',data.Data.LRPoleTempMsg)
+										if kw['lonsht']<=60
+											# 纵向位移超过60m的过滤掉
+											# print('latsht:',kw['latsht'])
+											# 界限过滤
+											msg = ['L#'+str(kw['objId']),kw['latsht'],kw['lonsht']]
+											data.Data.LRRadarMsgAdd('L',msg)
+											# print('pole:',data.Data.LRPoleTempMsg)
 									else:
 										print('limit out of range')
 								else:
