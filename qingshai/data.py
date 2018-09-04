@@ -23,6 +23,9 @@ class Data(object):
 	# 后车GPS数据锁
 	BackGPSLock = threading.lock()
 
+	LTrainPloeState = 0
+	RTrainPloeState = 0
+
 	"""docstring for Data"""
 	dictionary = {'GPS':{},
 				'GPS_FONT':{},
@@ -333,11 +336,32 @@ class Data(object):
 			# print('RRPoleTempMsg:',Data.RRPoleTempMsg)
 		
 	def assignPloeMsg(self):
-		pass
+		# 角度判断：>5°，机械臂在左边，-5°~5°，机械臂在中间，<-5°机械臂在右边
+		if Data.AngleMsg['AngleData'] == 'invalid' or -5<float(Data.AngleMsg['AngleData'])<5:
+			# 机械臂在中间，分别选取左右两边最近的杆子信息
+			if self.LNearRealAim():
+				pass
+			else:
+				pass
+			if self.RNearRealAim():
+				pass
+			else:
+				pass
+		elif float(Data.AngleMsg['AngleData'])<-5:
+			# 机械臂在右边，选取右边最近的杆子信息
+			if self.RNearRealAim():
+				pass
+			else:
+				pass
+		elif float(Data.AngleMsg['AngleData'])>5:
+			# 机械臂在左边，选取左边最近的杆子信息
+			if self.RNearRealAim():
+				pass
+			else:
+				pass
 
 	def LNearRealAim(self):
 		pass
 
 	def RNearRealAim(self):
 		pass
-
