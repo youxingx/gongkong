@@ -57,7 +57,7 @@ class Server_UDP(data.Data):
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		while True:
 			self.SetSendlist() #设置发送数据
-			# print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
+			print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
 			if self.debug:
 				# 如果是调试模式，发送给自己的主机一次，方便查看发送数据是否正确
 				sock.sendto(str(json.dumps(data.Data.SEND_STA)).encode(),('127.0.0.1',port))

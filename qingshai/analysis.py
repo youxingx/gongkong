@@ -86,6 +86,7 @@ def Gps(*args,**kw):
 		data.Data.LOCAL_GPS={'Lat':kw['Lat'],'Lon':kw['Lon'],'Speed':kw['Speed'],'Dir':kw['Dir'],
 							'distance_font':'invalid','ID':data.Data.ini['localID'],'LocalIp':data.Data.ini['localIP']}
 		data.Data.LocalGPSLock.release()
+		print('LOCAL_GPS:',data.Data.LOCAL_GPS)
 	else:
 		# data.Data.LOCAL_GPS={'Lat':'invalid','Lon':'invalid','Speed':'invalid','Dir':'invalid','distance_font':'invalid'}
 		data.Data.LocalGPSLock.acquire()
@@ -165,7 +166,7 @@ def Radar(*args,**kw):
 							if kw['width']>=LEFTRADARWIDTH[0] and kw['width']<=LEFTRADARWIDTH[1]:
 								if kw['probability']>=LEFTRADARPROBABILITY:
 									if kw['latsht']>=LEFTOBSRANGE[0] and kw['latsht']<=LEFTOBSRANGE[1]:
-										if kw['lonsht']<=60
+										if kw['lonsht']<=60:
 											# 纵向位移超过60m的过滤掉
 											# print('latsht:',kw['latsht'])
 											# 界限过滤
