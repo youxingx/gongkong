@@ -4,15 +4,6 @@ import analysis
 import threading
 from operator import itemgetter
 
-# 过滤范围
-# XTHRESHOLD = [-1,1]
-XTHRESHOLD = [-10,10]
-YTHRESHOLD = [-1,1]
-LRXRANGE = [0,2]
-RLXRANGE = [0,-2]
-YDISPARITY = 0.5
-GPSCONTRAST = 1
-CARLENGTH = 0
 # 两杆间距
 POLESSPACE = 50
 
@@ -303,13 +294,9 @@ class Data(object):
 		if radar == 'L':
 			Data.LRPoleMsg = Data.LRPoleTempMsg
 			Data.LRPoleTempMsg = []
-			# print('msg:',Data.LRPoleMsg)
-			# print('tempmsg:',Data.LRPoleTempMsg)
 		elif radar == 'R':
 			Data.RRPoleMsg = Data.RRPoleTempMsg
 			Data.RRPoleTempMsg = []
-			# print('msg:',Data.RRPoleMsg)
-			# print('tempmsg:',Data.RRPoleTempMsg)
 
 	def LRRadarMsgAdd(radar,msg):
 		repeat = 0
@@ -346,117 +333,11 @@ class Data(object):
 			# print('RRPoleTempMsg:',Data.RRPoleTempMsg)
 		
 	def assignPloeMsg(self):
-		# 判断角度
-		if Data.AngleMsg['AngleData'] == 'invalid' or -5<=float(Data.AngleMsg['AngleData'])<=5:
-			# 查找左边最近的非虚假目标
-			LNearestAim = self.LNearRealAim()
-			# 查找右边最近的非虚假目标
-			RNearestAim = self.RNearRealAim()
-			# 角度值不存在或角度值在-5°~5°之间，认为机械臂处在中间位置，此时选取左右两边最近的物体
-			if not LNearestAim and not RNearestAim:
-				# 左右两边都没有探测到目标
-				Data.LastPoleDis = None
-				# LastDirect = 'M'
-				Data.PoleMsg = []
-			elif LNearestAim and not RNearestAim:
-				# 左边探测到目标，右边没有探测到目标
-				Data.LastPoleDis = round(LNearestAim[2],2)
-				# LastDirect = 'L'
-				Data.PoleMsg.append({'ID':LNearestAim[0],'PoleX':('%.2f'%(LNearestAim[1])),'PoleY':('%.2f'%(LNearestAim[2]))})
-			elif not LNearestAim and RNearestAim:
-				# 右边探测到目标，左边没有探测到目标
-				Data.LastPoleDis = round(RNearestAim[2],2)
-				# LastDirect = 'R'
-				Data.PoleMsg.append({'ID':RNearestAim[0],'PoleX':('%.2f'%(RNearestAim[1])),'PoleY':('%.2f'%(RNearestAim[2]))})
-			elif LNearestAim and RNearestAim:
-				# 左右两边都探测到目标
-				if LNearestAim[2]<=RNearestAim[2]:
-					Data.LastPoleDis = round(LNearestAim[2],2)
-					# LastDirect = 'L'
-					Data.PoleMsg.append({'ID':LNearestAim[0],'PoleX':('%.2f'%(LNearestAim[1])),'PoleY':('%.2f'%(LNearestAim[2]))})
-				else:
-					Data.LastPoleDis = round(RNearestAim[2],2)
-					# LastDirect = 'R'
-					Data.PoleMsg.append({'ID':RNearestAim[0],'PoleX':('%.2f'%(RNearestAim[1])),'PoleY':('%.2f'%(RNearestAim[2]))})
-		else:
-			if float(Data.AngleMsg['AngleData'])>=0:
-				# 左边
-				# 查找左边最近的非虚假目标
-				LNearestAim = self.LNearRealAim()
-				if LNearestAim:
-					Data.LastPoleDis = round(LNearestAim[2],2)
-					# LastDirect = 'L'
-					Data.PoleMsg.append({'ID':LNearestAim[0],'PoleX':('%.2f'%(LNearestAim[1])),'PoleY':('%.2f'%(LNearestAim[2]))})
-				else:
-					Data.LastPoleDis = None
-					# LastDirect = 'M'
-					Data.PoleMsg = []
-			else:
-				# 右边
-				# 查找右边最近的非虚假目标
-				RNearestAim = self.RNearRealAim()
-				if RNearestAim:
-					Data.LastPoleDis = round(RNearestAim[2],2)
-					# LastDirect = 'R'
-					Data.PoleMsg.append({'ID':RNearestAim[0],'PoleX':('%.2f'%(RNearestAim[1])),'PoleY':('%.2f'%(RNearestAim[2]))})
-				else:
-					Data.LastPoleDis = None
-					# LastDirect = 'M'
-					Data.PoleMsg = []
+		pass
 
 	def LNearRealAim(self):
-		LTempAims = Data.LRPoleMsg
-		RTempAims = Data.RRPoleMsg
-		# 对tempAims按照纵向位移从小到大的顺序排序
-		LTempAims.sort(key=itemgetter(2))
-		# 过滤左雷达数据中侧向偏移在[-1,1]之外的数据
-		aims = [d for d in LTempAims if XTHRESHOLD[0]<=d[1]<=XTHRESHOLD[1] ]
-		if not len(aims):
-			return None
-		for aim in aims:
-			vflag = False
-			if Data.LastPoleDis!=None:
-				if (aim[2] -Data.LastPoleDis) > 5 and aim[2] < POLESSPACE:
-					# 和上一次最近的距离比较，如果此次最近的距离比上次大，且大于5m，表示上次最近的线杆消失来了新的线杆，如果距离<50m，则过滤掉;
-					continue
-				if (Data.LastPoleDis - aim[2]) > 4:
-					# 如果此次距离比上次突然小很多，则也表示为电线，过滤掉
-					continue
-			# 遍历右雷达数据，和左雷达数据进行比对
-			for o in RTempAims:
-				if abs(o[2]-aim[2])<=YDISPARITY:
-					if LRXRANGE[0]<=o[1]<=LRXRANGE[1]:
-						vflag = True
-						break
-			if not vflag:
-				return aim
-		return None
+		pass
 
 	def RNearRealAim(self):
-		LTempAims = Data.LRPoleMsg
-		RTempAims = Data.RRPoleMsg
-		# 对tempAims按照纵向位移从小到大的顺序排序
-		RTempAims.sort(key=itemgetter(2))
-		# 过滤左雷达数据中侧向偏移在[-1,1]之外的数据
-		aims = [d for d in RTempAims if XTHRESHOLD[0]<=d[1]<=XTHRESHOLD[1] ]
-		if not len(aims):
-			return None
-		for aim in aims:
-			vflag = False
-			if Data.LastPoleDis!=None:
-				if (aim[2] - Data.LastPoleDis) > 5 and aim[2] < POLESSPACE:
-					# 和上一次最近的距离比较，如果此次最近的距离比上次大，且大于5m，表示上次最近的线杆消失来了新的线杆，如果距离<50m，则过滤掉;
-					continue
-				if (Data.LastPoleDis - aim[2]) > 4:
-					# 如果此次距离比上次突然小很多，则也表示为电线，过滤掉
-					continue
-			for o in LTempAims:
-				# 遍历右雷达数据，和左雷达数据进行比对
-				if abs(o[2]-aim[2])<=YDISPARITY:
-					if RLXRANGE[0]<=o[1]<=RLXRANGE[1]:
-						vflag = True
-						break
-			if not vflag:
-				return aim
-		return None
+		pass
 
