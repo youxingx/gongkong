@@ -84,7 +84,8 @@ class Serials(data.Data,object):
 class Serial_Angle(data.Data):
 	def __init__(self,com,**kw):
 		if init.debug==1:
-			kw={'baudrate':115200}
+			if kw is None:
+				kw={'baudrate':115200}
 		else:
 			if kw is None:
 				kw={'baudrate':115200,'bytesize':serial.SEVENBITS,'parity':serial.PARITY_EVEN}
