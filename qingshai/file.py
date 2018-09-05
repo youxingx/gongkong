@@ -85,16 +85,18 @@ class File_init(data.Data):
 					print('create Log file')
 					# print('建立日志文件夹')
 			t=time.strftime('%Y.%m.%d-%H.%M.%S',time.localtime(time.time()))
-			if os.listdir('./%s/'%path):
+			filelist = os.listdir('./%s/'%path)
+			filelist.sort()
+			if filelist:
 				# 获取文件夹文件列表，计算文件夹大小，若超过1G，则删除最早的文件，防止存储过多数据，把硬盘塞满
 				# 1G数据能够存储3天左右的数据
 				path_size=0
-				for i in os.listdir('./%s/'%path):
+				for i in filelist:
 					path_size+=os.path.getsize('./%s/%s'%(path,i))
 				if(path_size>self.path_max*1024*1024):
 					os.remove('./%s/%s'%(path,os.listdir('./%s/'%path)[0]))
 				# 获取当前文件大小，若文件大于10M，则重新建一个文件，防止文件过大，不易于查找
-				f=os.listdir('./%s/'%path)[-1]
+				f=filelist[-1]
 				size=os.path.getsize('./%s/%s'%(path,f))
 				if(size<(self.size*1024) and re.findall(r'\d{4}\.\d{1,2}\.\d{1,2}',t)==re.findall(r'\d{4}\.\d{1,2}\.\d{1,2}',f)):
 					pass
@@ -110,7 +112,10 @@ class File_init(data.Data):
 				f=t+'.txt'
 			# 将数据写入文件
 			with open('./%s/%s'%(path,f),'a',encoding='utf-8') as f:
-				f.write(json.dumps(s,sort_keys=True,ensure_ascii=False,indent=4,separators=(',',':'),skipkeys=True))
+				try:
+					f.write(json.dumps(s,sort_keys=True,ensure_ascii=False,indent=4,separators=(',',':'),skipkeys=True))
+				except Exception as e:
+					print(e)
 
 	# 存储传感器收到的
 	def Store_raw(self,s,path='Raws'):
@@ -123,16 +128,18 @@ class File_init(data.Data):
 					# print('建立日志文件夹')
 					print('create Log file')
 			t=time.strftime('%Y.%m.%d-%H.%M.%S',time.localtime(time.time()))
-			if os.listdir('./%s/'%path):
+			filelist = os.listdir('./%s/'%path)
+			filelist.sort()
+			if filelist:
 				# 获取文件夹文件列表，计算文件夹大小，若超过1G，则删除最早的文件，防止存储过多数据，把硬盘塞满
 				# 1G数据能够存储3天左右的数据
 				path_size=0
-				for i in os.listdir('./%s/'%path):
+				for i in filelist:
 					path_size+=os.path.getsize('./%s/%s'%(path,i))
 				if(path_size>self.path_max*1024*1024):
 					os.remove('./%s/%s'%(path,os.listdir('./%s/'%path)[0]))
 				# 获取当前文件大小，若文件大于10M，则重新建一个文件，防止文件过大，不易于查找
-				f=os.listdir('./%s/'%path)[-1]
+				f=filelist[-1]
 				size=os.path.getsize('./%s/%s'%(path,f))
 				if(size<(self.size*1024) and re.findall(r'\d{4}\.\d{1,2}\.\d{1,2}',t)==re.findall(r'\d{4}\.\d{1,2}\.\d{1,2}',f)):
 					pass
@@ -148,7 +155,10 @@ class File_init(data.Data):
 				f=t+'raw.txt'
 			# 将数据写入文件
 			with open('./%s/%s'%(path,f),'a',encoding='utf-8') as f:
-				f.writelines(s)
+				try:
+					f.writelines(s)
+				except Exception as e:
+					print(e)
 	# 存储上传给TOD的报文线程，每隔1s查询一次，是否需要进行数据存储
 	def Logs_log(self):
 		while True:
