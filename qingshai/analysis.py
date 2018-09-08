@@ -37,7 +37,7 @@ def AP(*args,**kw):
 	# 前后车通信处理函数
 	if (args[0]=='GET'):
 		# print('data:', kw['data'])
-		if 'ID' in kw['data']:
+		if 'ID' in kw['data'] and 'LocalIp' in kw['data']:
 			if(kw['data']['ID'] == data.Data.ini['fwdTrainID'] and kw['data']['LocalIp'] == data.Data.ini['fwdTrainIP']):
 				data.Data.FontGPSLock.acquire()
 				data.Data.FB_GPS[0] = {'Lat':kw['data']['Lat'],'Lon':kw['data']['Lon'],'Speed':kw['data']['Speed'],'Dir':kw['data']['Dir'],
@@ -127,15 +127,20 @@ def Radar(*args,**kw):
 								#界限过滤
 								data.Data.LongRadarTempData.append(kw['lonsht'])
 							else:
-								print('limit out of range')
+								# print('limit out of range')
+								pass
 						else:
-							print('size out of range')
+							# print('size out of range')
+							pass
 					else:
-						print('probability out of range')
+						# print('probability out of range')
+						pass
 				else:
-					print('speed out of range')
+					# print('speed out of range')
+					pass
 			else:
-				print('measurestate out of range')
+				# print('measurestate out of range')
+				pass
 		else:
 			if args[1]!=1:
 				# 雷达状态错误
@@ -259,7 +264,7 @@ def haversine( lat1,lon1, lat2, lon2):
 	a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
 	c = 2 * asin(sqrt(a)) 
 	r = 6378.137 # Radius of earth in kilometers. Use 3956 for miles
-	return int(c * r * 1000)   #return m
+	return c * r * 1000   #return m
 
 def isNumber(x):
 	# 判断x是否为数字类型

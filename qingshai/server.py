@@ -45,7 +45,7 @@ class Server_UDP(data.Data):
 		threading.Thread(target=self.Send_upper,args=(self.upper_ip,self.port)).start()
 		print('UDP Start Send MESSAGE to %s:%d'%(self.upper_ip,self.port))
 		# 开启定时线程,监测能否收到前后车的数据
-		# threading.Thread(target=self.Timer,).start()
+		threading.Thread(target=self.Timer,).start()
 		print('UDP Start FB MESSAGE to %s:%d'%(self.upper_ip,self.gps_port))
 		# if debug==1:
 		#     threading.Thread(target=self.UDP_back_msg,args=(self.host,self.port)).start()
@@ -57,7 +57,7 @@ class Server_UDP(data.Data):
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		while True:
 			self.SetSendlist() #设置发送数据
-			print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
+			# print('senddata:',str(json.dumps(data.Data.SEND_MSG)))
 			if self.debug:
 				# 如果是调试模式，发送给自己的主机一次，方便查看发送数据是否正确
 				sock.sendto(str(json.dumps(data.Data.SEND_STA)).encode(),('127.0.0.1',port))
@@ -94,14 +94,12 @@ class Server_UDP(data.Data):
 					analysis.AP('GET',1,addr,data=json.loads(tempdata.decode()))
 				if addr[0]==self.font_ip:
 					data.Data.FBL_TIMEOUT['F']=5
-					analysis.AP('F',1,data=json.loads(tempdata.decode()))
+					# analysis.AP('GET',1,addr,data=json.loads(tempdata.decode()))
+					# analysis.AP('F',1,data=json.loads(tempdata.decode()))
 				if addr[0]==self.behind_ip:
 					data.Data.FBL_TIMEOUT['B']=5
-					# print(json.loads(data.decode()))
-					analysis.AP('B',1,data=json.loads(tempdata.decode()))
-				elif addr[0]==analysis.Get_IP(match=self.match) or addr[0]==self.ip:
-					data.Data.FBL_TIMEOUT['L']=5
-					analysis.AP('L',1)
+					# analysis.AP('GET',1,addr,data=json.loads(tempdata.decode()))
+					# analysis.AP('B',1,data=json.loads(tempdata.decode()))
 				data.Data.Statelist[6]['Status'] = '1'
 				time.sleep(0.1)
 			except Exception as e:

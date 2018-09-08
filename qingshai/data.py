@@ -78,15 +78,27 @@ class Data(object):
 	# LastDirect = 'M'
 	# 当前机械臂方向
 	# CurDirect = 'M'
-	# 前次最近线杆距离
-	LastPoleDis = None
 
 	# 上次的GPS数据  lat:纬度，lon精度，valid是否有效:0:无效 1:有效
 	LastGPS = {
-			'lat':0,
+			'Lat':0,
 			'Lon':0,
 			'valid':0
 	}
+
+	# 上次左边最近的杆子距离<5m,记录此时的GPS值
+	LastLGPS = {
+			'Lat':0,
+			'Lon':0,
+			'valid':0
+	}
+	# 上次右边最近的杆子距离<5m,记录此时的GPS值
+	LastRGPS = {
+			'Lat':0,
+			'Lon':0,
+			'valid':0
+	}
+
 	# 当前最近线杆距离
 	# curPoleDis = 0
 
@@ -180,12 +192,12 @@ class Data(object):
 		return send
 
 	def LongRadarMsgCycle():
-		Data.LongRDataLock.acquire()
-		Data.LongRadarData = Data.LongRadarTempData
-		Data.LongRadarData.sort()
-		# print('long radar:',Data.LongRadarData)
-		Data.LongRDataLock.release()
-		Data.LongRadarTempData = []
+		if len(Data.LongRadarTempData):
+			Data.LongRDataLock.acquire()
+			Data.LongRadarData = Data.LongRadarTempData
+			Data.LongRadarData.sort()
+			Data.LongRDataLock.release()
+			Data.LongRadarTempData = []
 
 	def assignTrainMsg(self):
 		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] == '1':
@@ -232,6 +244,7 @@ class Data(object):
 						# 上次前车距离有效
 						aimFlag = False
 						Data.LongRDataLock.acquire()
+						# print(Data.LongRadarData)
 						for i in Data.LongRadarData:
 							if abs(i-Data.LastFontDis)<=2:
 								# 找到目标，退出
@@ -244,33 +257,36 @@ class Data(object):
 						Data.LongRDataLock.release()
 					else:
 						# 上次前车距离无效,选取最近的
+						print('long radar ok,local gps ok,font comm not ok')
 						Data.LongRDataLock.acquire()
 						Data.TrainMsg['TrainFwd'] = str(round(Data.LongRadarData[0],2))
 						Data.LastFontDis = round(Data.LongRadarData[0],2)
 						Data.LongRDataLock.release()
 				else:
 					# 没有找到目标，采用上一次的值
+					print('no radar data')
 					if Data.LastFontDis == 'invalid':
 						Data.TrainMsg['TrainFwd'] = '0'
 					else:
 						Data.TrainMsg['TrainFwd'] = str(Data.LastFontDis)
 					# Data.TrainMsg['TrainFwd'] = str(Data.LastFontDis)
+				Data.LastFontDis = 'invalid'
 			if Data.Statelist[8]['Status'] == '1':
 				# 后车通信正常
 				Data.LocalGPSLock.acquire()
 				Data.BackGPSLock.acquire()
 				backDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[1]['Lat'][1:]),float(Data.FB_GPS[1]['Lon'][1:]))
-				Data.TrainMsg['TrainFwd'] = str(round(backDis,2))
+				Data.TrainMsg['TrainBack'] = str(round(backDis,2))
 				Data.LocalGPSLock.release()
 				Data.BackGPSLock.release()
 			else:
 				# 后车通信不正常
-				Data.TrainMsg['TrainFwd'] = '0'
+				Data.TrainMsg['TrainBack'] = '0'
 				pass
 			# GPS值有效，记录GPS
 			Data.LocalGPSLock.acquire()
-			Data.LastGPS['lat'] = Data.LOCAL_GPS['Lat']
-			Data.LastGPS['lon'] = Data.LOCAL_GPS['lon']
+			Data.LastGPS['Lat'] = Data.LOCAL_GPS['Lat']
+			Data.LastGPS['Lon'] = Data.LOCAL_GPS['Lon']
 			Data.LastGPS['valid'] = 1
 			Data.LocalGPSLock.release()
 		if Data.Statelist[5]['Status'] == '1' and  Data.Statelist[3]['Status'] != '1':
@@ -283,6 +299,7 @@ class Data(object):
 				fontDis = analysis.haversine(float(Data.LOCAL_GPS['Lat'][1:]),float(Data.LOCAL_GPS['Lon'][1:]),float(Data.FB_GPS[0]['Lat'][1:]),float(Data.FB_GPS[0]['Lon'][1:]))
 				Data.LocalGPSLock.release()
 				Data.FontGPSLock.release()
+				print('fontDis:',fontDis)
 				Data.TrainMsg['TrainFwd'] = str(round(fontDis,2))
 				Data.LastFontDis = round(fontDis,2)
 			else:
@@ -302,8 +319,8 @@ class Data(object):
 				Data.TrainMsg['TrainBack'] = '0'
 			# GPS值有效，记录GPS
 			Data.LocalGPSLock.acquire()
-			Data.LastGPS['lat'] = Data.LOCAL_GPS['Lat']
-			Data.LastGPS['lon'] = Data.LOCAL_GPS['lon']
+			Data.LastGPS['Lat'] = Data.LOCAL_GPS['Lat']
+			Data.LastGPS['Lon'] = Data.LOCAL_GPS['Lon']
 			Data.LastGPS['valid'] = 1
 			Data.LocalGPSLock.release()
 		if Data.Statelist[3]['Status'] == '1' and Data.Statelist[5]['Status'] != '1':
@@ -316,7 +333,7 @@ class Data(object):
 					# 上次前车距离有效
 					aimFlag = False
 					Data.LongRDataLock.acquire()
-					print('long radar:',Data.LongRadarData)
+					# print('long radar:',Data.LongRadarData)
 					for i in Data.LongRadarData:
 						if abs(i-Data.LastFontDis)<=2:
 							# 找到目标，退出
@@ -344,12 +361,12 @@ class Data(object):
 			Data.TrainMsg['TrainBack'] = '0'
 			Data.TrainMsg['TrainRate'] = 'invalid'
 			# GPS值无效
-			Data.LastGPS = {'lat':0,'Lon':0,'valid':0}
+			Data.LastGPS = {'Lat':0,'Lon':0,'valid':0}
 		if Data.Statelist[3]['Status'] != '1' and Data.Statelist[5]['Status'] != '1':
 			# 长雷达状态正常，GPS状态不正常
 			Data.TrainMsg={'TrainFwd':'0','TrainBack':'0','TrainRate':'invalid'}
 			# GPS值无效
-			Data.LastGPS = {'lat':0,'Lon':0,'valid':0}
+			Data.LastGPS = {'Lat':0,'Lon':0,'valid':0}
 
 	def LRRadarMsgCycle(radar):
 		if radar == 'L':
@@ -428,10 +445,12 @@ class Data(object):
 					# 有目标,查找
 					Data.LRPoleMsg.sort(key=itemgetter(2))
 					Data.PoleMsg.append({'ID':Data.LRPoleMsg[0][0],'PoleX':('%.2f'%(Data.LRPoleMsg[0][1])),'PoleY':('%.2f'%(Data.LRPoleMsg[0][2]))})
-					if Data.LRPoleMsg[0][2]<=5:
-						# 杆子距离小于5m记录当前GPS值:
-
-						Data.LTrainPloeState = 2
+					if Data.LRPoleMsg[0][2]<=5 and Data.Statelist[5]['Status']=='1':
+						# 杆子距离小于5m记录当前GPS值,且GPS正常:
+						Data.LastLGPS['lat'] = Data.LOCAL_GPS['Lat']
+						Data.LastLGPS['Lon'] = Data.LOCAL_GPS['Lon']
+						Data.LastLGPS['valid'] = 1
+						Data.LTrainPloeState = 1
 					pass
 				else:
 					# 没有目标
@@ -439,7 +458,17 @@ class Data(object):
 				pass
 			elif Data.LTrainPloeState == 1:
 				# 小于等于5m
-				# GPS计算
+				if Data.Statelist[5]['Status']=='1':
+					# GPS正常
+					# 根据GPS计算杆子距离
+					pass
+				else:
+					# GPS不正常
+					Data.LastLGPS['lat'] = 0
+					Data.LastLGPS['Lon'] = 0
+					Data.LastLGPS['valid'] = 0
+					Data.LTrainPloeState = 1
+					pass
 				pass
 			elif Data.LTrainPloeState == 2:
 				# 刚过杆子
@@ -459,10 +488,15 @@ class Data(object):
 				else:
 					# 没有目标
 					pass
+				Data.LastLGPS['lat'] = 0
+				Data.LastLGPS['Lon'] = 0
+				Data.LastLGPS['valid'] = 0
+				Data.LTrainPloeState = 1
 		else:
 			# 左雷达不正常,删除左雷达中左边最近的杆子距离
 			# for i in Data.PoleMsg:
 			# 	if i['']
+			Data.LTrainPloeState = 0
 			Data.PoleMsg = []
 			Data.LTrainPloeState = 0
 

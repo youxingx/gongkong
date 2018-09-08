@@ -42,6 +42,7 @@ class Serials(data.Data,object):
 				# self.buff+=self.ser.read(n).decode()
 				try:
 					self.buff+=self.ser.read(n).decode()
+					# print('buff:',self.buff)
 					self.refresh=time.time()
 					while len(self.buff):
 						index=self.buff.find(self.split)
@@ -266,6 +267,7 @@ class Serial_LongRadar(Serials):
 				s=s[index:]
 				if re.match(r'^&(100|200)\w{21}\|$',s):
 					raw=s.encode()
+					# print('raw:',raw)
 					if s[:4]=='&100':
 						# 状态报文
 						mode, angle, radius, Radarstate, Ctlstate = [int(d, 16) for d in struct.unpack('2s3s3scc', raw[4:14])]
@@ -305,6 +307,8 @@ class Serial_LongRadar(Serials):
 									probability=probability,lonspeed=lonspeed,latspeed=latspeed)
 					else:
 						return self.info('LongRadar',1)
+				else:
+					print('match error:',s.encode())
 		elif mode==2:
 			# 连接断开状态
 			return self.info('LongRadar',2)
